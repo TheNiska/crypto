@@ -1,7 +1,6 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.exceptions import InvalidSignature
@@ -71,11 +70,3 @@ def verify(signature, pub_key_pem, data) -> bool:
         return True
     except InvalidSignature:
         return False
-
-
-if __name__ == '__main__':
-    priv, pub = create_new_pair('Denis')
-    signature = sign('My data', priv, 'Denis')
-    print(len(signature.hex()))
-    is_valid = verify(signature, pub, 'My data')
-    print(is_valid)
