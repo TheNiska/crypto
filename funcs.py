@@ -7,6 +7,9 @@ from cryptography.exceptions import InvalidSignature
 
 
 def create_new_pair(password: str) -> (str, str):
+    '''Creates private/public keys pair. Encrypts private key with password.
+    Returns (private_key, public_key) is string format'''
+
     password = password.encode()
 
     # creating new pair
@@ -30,17 +33,17 @@ def create_new_pair(password: str) -> (str, str):
     return (private_key_pem.decode(), public_key_pem.decode())
 
 
-def sign(data, priv_key_pem, password):
+def sign(data: str, priv_key_pem: str, password: str) -> str:
+    '''Signs data with encyptes private key. Return signature in hex'''
+
     private_key = serialization.load_pem_private_key(
         priv_key_pem.encode(),
         password=password.encode(),
         backend=default_backend()
     )
 
-    data_to_sign = data.encode()
-
     signature = private_key.sign(
-        data_to_sign,
+        data.encode(),
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
             salt_length=padding.PSS.MAX_LENGTH
@@ -48,10 +51,14 @@ def sign(data, priv_key_pem, password):
         hashes.SHA256()
     )
 
-    return signature
+    return signature.hex()
 
 
-def verify(signature, pub_key_pem, data) -> bool:
+def verify(signature: str, pub_key_pem: str, data: str) -> bool:
+    '''Verifies that the given signature if valid for the give public key'''
+
+    bytes_signature = bytes.fromhex(signature)  # from hex to bytes
+
     public_key = serialization.load_pem_public_key(
         pub_key_pem.encode(),
         backend=default_backend()
@@ -59,7 +66,7 @@ def verify(signature, pub_key_pem, data) -> bool:
 
     try:
         public_key.verify(
-            signature,
+            bytes_signature,
             data.encode(),
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
@@ -70,3 +77,15 @@ def verify(signature, pub_key_pem, data) -> bool:
         return True
     except InvalidSignature:
         return False
+
+
+if __name__ == '__main__':
+    private_key, public_key = create_new_pair('Denis')
+    print(f"Private key: {type(private_key)}, public_key: {type(public_key)}")
+
+    signature = sign('Sending money', private_key, 'Denis')
+    print("Singature type: ", type(signature))
+    print(signature)
+
+    res = verify(signature, public_key, 'Sendng money')
+    print(res)

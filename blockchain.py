@@ -1,6 +1,7 @@
 from hashlib import sha256
 from funcs import verify
 from controller import get_public_key
+from datetime import datatime
 
 
 class DataRow:
@@ -11,13 +12,12 @@ class DataRow:
         self.amount = amount
         self.signature = signature  # signature in hex
 
-    def get_string(self):
+    def get_transaction_str(self) -> str:
         data = [
             str(self.sender),
             str(self.amount),
             str(self.recipient),
         ]
-
         return ";".join(data)
 
     def verify_signature(self) -> bool:
@@ -25,8 +25,7 @@ class DataRow:
         who signed this transaction'''
 
         public_key = get_public_key(self.sender)
-        bytes_signature = bytes.fromhex(self.signature)
-        return verify(bytes_signature, public_key, self.get_string())
+        return verify(self.signature, public_key, self.get_transaction_str())
 
     def __repr__(self):
         return f"({self.sender} sent {self.amount} to {self.recipient})"
@@ -85,7 +84,3 @@ if __name__ == '__main__':
     row1 = DataRow(**request)
     res = row1.verify_signature()
     print(res)
-    rows = [row1]
-
-    block = Block(data_rows=rows)
-    print(block)
