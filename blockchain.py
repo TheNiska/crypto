@@ -1,7 +1,6 @@
 from hashlib import sha256
 from funcs import verify
 from controller import get_public_key
-from datetime import datatime
 
 
 class DataRow:
@@ -32,37 +31,36 @@ class DataRow:
 
 
 class Block:
-    def __init__(self, data_rows=[], prev_hash='0000'):
-        self.data = data_rows
-        self.prev_hash = prev_hash
+    def __init__(self, data_rows=None, prev_hash=None):
+        self.prev_hash = prev_hash if prev_hash is not None else '0' * 64
+        self.num = 1
+        self.nonce = 0
+        self.hash = None
 
-    @property
-    def get_hash(self):
-        data_string = ''
-        if self.data:
-            for transaction in self.data:
-                data_string += transaction.get_string()
+        self.data = ''
+        if data_rows is not None:
+            for row in data_rows:
+                self.data += f"{row.get_transaction_str()};{row.signature}\n"
 
-        string = data_string + self.prev_hash
-        return sha256((string.encode('utf-8'))).hexdigest()
+        self.mine_hash()
+
+    def get_hash(self) -> str:
+        hash_str = f"{self.num}\n{self.nonce}\n{self.data}{self.prev_hash}"
+        return sha256((hash_str.encode('utf-8'))).hexdigest()
+
+    def mine_hash(self) -> None:
+        VALID_PREFIX = 'ffff'
+        current_hash = ''
+
+        while not current_hash.startswith(VALID_PREFIX):
+            self.nonce += 1
+            current_hash = self.get_hash()
+
+        self.hash = current_hash
 
     def __repr__(self):
-        return f"Hash: {self.get_hash}\nData: {self.data}\n" \
+        return f"Hash: {self.hash}\nNonce: {self.nonce}\nData: {self.data}\n" \
                f"Prev_Hash: {self.prev_hash}"
-
-
-class BlockChain:
-    def __init__(self):
-        origin = Block(data_rows=[DataRow('origin', 'origin', 0)])
-        self.blocks = []
-        self.blocks.append(origin)
-
-    def __repr__(self):
-        return str(self.blocks)
-
-    def add_block(self):
-        last_hash = self.blocks[-1].get_hash()
-        new_block = Block(prev_hash=last_hash)
 
 
 if __name__ == '__main__':
@@ -82,5 +80,9 @@ if __name__ == '__main__':
     }
 
     row1 = DataRow(**request)
-    res = row1.verify_signature()
-    print(res)
+    is_valid = row1.verify_signature()
+    if is_valid:
+        block = Block(data_rows=[row1])
+        print(block)
+    else:
+        print('Validation failed!')

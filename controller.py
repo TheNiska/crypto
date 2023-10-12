@@ -4,8 +4,8 @@ from funcs import create_new_pair
 
 
 def manage_connection(func):
-    def wrapper(*args, **kwargs):
-        con = connect("users.db")
+    def wrapper(*args, db_path='users.db', **kwargs):
+        con = connect(db_path)
         cur = con.cursor()
         result = None
 
@@ -15,7 +15,7 @@ def manage_connection(func):
         except Exception as ex:
             print(type(ex).__name__, ': ', ex, sep='')
         else:
-            print('Success!')
+            print('Successfully done with database!')
         finally:
             con.close()
 
@@ -25,7 +25,8 @@ def manage_connection(func):
 
 @manage_connection
 def execute_query(query: str, cur=None):
-    return cur.execute(query)
+    array = [el for el in cur.execute(query)]
+    return array
 
 
 @manage_connection
@@ -58,6 +59,6 @@ def get_public_key(username: str, cur=None) -> str:
 
 
 if __name__ == '__main__':
-    query = ""
-    res = execute_query(query)
-    print(res)
+    query = "select max(id) from users"
+    result = execute_query(query)
+    print(result[0][0])
