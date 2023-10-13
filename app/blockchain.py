@@ -1,6 +1,6 @@
 from hashlib import sha256
 from funcs import verify
-from controller import get_public_key
+from controller import get_public_key, add_block
 
 
 class DataRow:
@@ -23,7 +23,7 @@ class DataRow:
         '''Getting the sender's public key from db and verifying that it's him
         who signed this transaction'''
 
-        public_key = get_public_key(self.sender)
+        public_key = get_public_key(self.sender, db_path="users.db")
         return verify(self.signature, public_key, self.get_transaction_str())
 
     def __repr__(self):
@@ -83,6 +83,7 @@ if __name__ == '__main__':
     is_valid = row1.verify_signature()
     if is_valid:
         block = Block(data_rows=[row1])
-        print(block)
+        add_block(block, db_path="blockchain.db")
+        
     else:
         print('Validation failed!')

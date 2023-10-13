@@ -1,10 +1,12 @@
 from sqlite3 import connect
 from hashlib import sha256
-from funcs import create_new_pair
+from app.funcs import create_new_pair
 
 
 def manage_connection(func):
-    def wrapper(*args, db_path='users.db', **kwargs):
+    def wrapper(*args, db_path=None, **kwargs):
+        if db_path is None:
+            raise NameError("Required keyword argument 'db_path' is not found")
         con = connect(db_path)
         cur = con.cursor()
         result = None
@@ -58,7 +60,25 @@ def get_public_key(username: str, cur=None) -> str:
     return cur.execute(query).fetchone()[0]
 
 
+@manage_connection
+def add_block(block, cur=None):
+    fields = "(hash, prev_hash, nonce, data)"
+    values = f"('{block.hash}', '{block.prev_hash}', " \
+             f"'{block.nonce}', '{block.data}')"
+
+    query = f"insert into blockchain1 {fields} values {values}"
+    cur.execute(query)
+
+
+@manage_connection
+def get_blocks(cur=None):
+    res = cur.execute("select * from blockchain1").fetchall()
+    return res
+
+
 if __name__ == '__main__':
-    query = "select max(id) from users"
-    result = execute_query(query)
-    print(result[0][0])
+    pass
+    # query = "create table blockchain1(id int primary key, hash varchar(64), prev_hash varchar(64), nonce int, data mediumtext)"
+    # result = execute_query(query, db_path='blockchain.db')
+    blocks = get_blocks(db_path="blockchain.db")
+    print(blocks)
