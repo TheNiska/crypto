@@ -1,6 +1,9 @@
 from sqlite3 import connect
 from hashlib import sha256
-from app.funcs import create_new_pair
+try:
+    from app.funcs import create_new_pair
+except Exception:
+    from funcs import create_new_pair
 
 
 def manage_connection(func):
@@ -77,8 +80,6 @@ def get_blocks(cur=None):
 
 
 if __name__ == '__main__':
-    pass
-    # query = "create table blockchain1(id int primary key, hash varchar(64), prev_hash varchar(64), nonce int, data mediumtext)"
-    # result = execute_query(query, db_path='blockchain.db')
-    blocks = get_blocks(db_path="blockchain.db")
-    print(blocks)
+    query = "select max(id) from blockchain1"
+    result = execute_query(query, db_path='blockchain.db')
+    print(result)

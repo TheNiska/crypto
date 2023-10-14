@@ -1,6 +1,6 @@
 from hashlib import sha256
 from funcs import verify
-from controller import get_public_key, add_block
+from controller import get_public_key, add_block, execute_query
 
 
 class DataRow:
@@ -31,14 +31,14 @@ class DataRow:
 
 
 class Block:
-    def __init__(self, data_rows=None, prev_hash=None):
+    def __init__(self, data_rows=None, prev_hash=None, num=None):
         self.prev_hash = prev_hash if prev_hash is not None else '0' * 64
-        self.num = 1
+        self.num = num
         self.nonce = 0
         self.hash = None
 
         self.data = ''
-        if data_rows is not None:
+        if data_rows:
             for row in data_rows:
                 self.data += f"{row.get_transaction_str()};{row.signature}\n"
 
@@ -59,8 +59,8 @@ class Block:
         self.hash = current_hash
 
     def __repr__(self):
-        return f"Hash: {self.hash}\nNonce: {self.nonce}\nData: {self.data}\n" \
-               f"Prev_Hash: {self.prev_hash}"
+        return f"Num: {self.num}\nHash: {self.hash}\nNonce: {self.nonce}\n" \
+               f"Data: {self.data}\nPrev_Hash: {self.prev_hash}"
 
 
 if __name__ == '__main__':
@@ -83,7 +83,8 @@ if __name__ == '__main__':
     is_valid = row1.verify_signature()
     if is_valid:
         block = Block(data_rows=[row1])
-        add_block(block, db_path="blockchain.db")
+        # add_block(block, db_path="blockchain.db")
+        print(block)
         
     else:
         print('Validation failed!')
